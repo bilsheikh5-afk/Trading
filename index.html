@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Trading Advisor</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.4em;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #34495e;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid #3498db;
+            background: rgba(52, 152, 219, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .trade-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+        
+        .trade-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .trade-buy {
+            border-left: 4px solid #27ae60;
+        }
+        
+        .trade-sell {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .trade-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .trade-symbol {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        
+        .trade-direction {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .direction-buy {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+        
+        .direction-sell {
+            background: #fadbd8;
+            color: #e74c3c;
+        }
+        
+        .trade-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .detail-label {
+            color: #7f8c8d;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .score-badge {
+            background: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .notification {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .notification.success {
+            background: #d5f4e6;
+            color: #27ae60;
+            border: 1px solid #27ae60;
+        }
+        
+        .notification.error {
+            background: #fadbd8;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📈 Live Trading Advisor</h1>
+            <p>Real-time analysis for Crypto, Forex, Indices & Commodities</p>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('analysis')">Analysis</div>
+            <div class="tab" onclick="switchTab('settings')">Settings</div>
+            <div class="tab" onclick="switchTab('results')">Results</div>
+        </div>
+        
+        <!-- Analysis Tab -->
+        <div id="analysis" class="tab-content active">
+            <div class="form-group">
+                <label>Market Areas to Scan:</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" id="chkCrypto" checked> Crypto
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" id="chkForex"> Forex
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" id="chkIndices"> Indices
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" id="chkCommodities"> Commodities
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Top Recommendations:</label>
+                <select id="topN">
+                    <option value="3">Top 3</option>
+                    <option value="5" selected>Top 5</option>
+                    <option value="10">Top 10</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-success" onclick="runAnalysis()">
+                🔍 Scan Live Trading Opportunities
+            </button>
+            
+            <div class="loading" id="loadingAnalysis">
+                <div class="spinner"></div>
+                <p>Analyzing live markets... This may take a minute</p>
+            </div>
+            
+            <div class="notification" id="analysisNotification"></div>
+        </div>
+        
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="form-group">
+                <label>Backend API URL:</label>
+                <input type="text" id="apiBaseUrl" value="http://localhost:5000/api" placeholder="http://your-server.com/api">
+            </div>
+            
+            <div class="form-group">
+                <label>Capital (USD):</label>
+                <input type="number" id="capital" value="10000" min="1000" step="1000">
+            </div>
+            
+            <div class="form-group">
+                <label>Risk-Reward Ratio:</label>
+                <input type="number" id="riskReward" value="2.0" min="1.5" max="5" step="0.1">
+            </div>
+            
+            <div class="form-group">
+                <label>Exchange:</label>
+                <select id="exchange">
+                    <option value="binance">Binance</option>
+                    <option value="kucoin">KuCoin</option>
+                    <option value="bybit">Bybit</option>
+                    <option value="okx">OKX</option>
+                </select>
+            </div>
+            
+            <button class="btn" onclick="saveSettings()">
+                💾 Save Settings
+            </button>
+            
+            <div class="notification" id="settingsNotification"></div>
+        </div>
+        
+        <!-- Results Tab -->
+        <div id="results" class="tab-content">
+            <div id="resultsContainer">
+                <p style="text-align: center; color: #7f8c8d; padding: 40px;">
+                    Run analysis to see live trading recommendations
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="connectionStatus" class="connection-status">
+        Checking connection...
+    </div>
+
+    <script>
+        // Configuration - This replaces your java script.java file
+        const config = {
+            apiBaseUrl: 'http://localhost:5000/api',
+            capital: 10000,
+            riskReward: 2.0,
+            atrMultiplier: 2.0,
+            exchange: 'binance'
+        };
+
+        // API Service
+        const apiService = {
+            async healthCheck() {
+                try {
+                    const response = await fetch(`${config.apiBaseUrl}/health`);
+                    return await response.json();
+                } catch (error) {
+                    console.error('Health check failed:', error);
+                    return { status: 'unhealthy', error: error.message };
+                }
+            },
+
+            async getSymbols(category = 'all') {
+                try {
+                    const response = await fetch(`${config.apiBaseUrl}/symbols?category=${category}`);
+                    return await response.json();
+                } catch (error) {
+                    console.error('Failed to fetch symbols:', error);
+                    return { symbols: [], error: error.message };
+                }
+            },
+
+            async analyzeMarkets(categories, topN = 5) {
+                try {
+                    const response = await fetch(`${config.apiBaseUrl}/analyze`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            categories: categories,
+                            exchange: config.exchange,
+                            top_n: topN,
+                            capital: config.capital
+                        })
+                    });
+                    return await response.json();
+                } catch (error) {
+                    console.error('Analysis failed:', error);
+                    return { success: false, error: error.message };
+                }
+            }
+        };
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`.tab:nth-child(${tabName === 'analysis' ? 1 : tabName === 'settings' ? 2 : 3})`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Show notifications
+        function showNotification(elementId, message, type) {
+            const notification = document.getElementById(elementId);
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000);
+        }
+
+        // Run analysis with live data
+        async function runAnalysis() {
+            const loading = document.getElementById('loadingAnalysis');
+            const topN = parseInt(document.getElementById('topN').value);
+            
+            // Get selected areas
+            const selectedAreas = [];
+            if (document.getElementById('chkCrypto').checked) selectedAreas.push('Crypto');
+            if (document.getElementById('chkForex').checked) selectedAreas.push('Forex');
+            if (document.getElementById('chkIndices').checked) selectedAreas.push('Indices');
+            if (document.getElementById('chkCommodities').checked) selectedAreas.push('Commodities');
+            
+            if (selectedAreas.length === 0) {
+                showNotification('analysisNotification', 'Please select at least one market area', 'error');
+                return;
+            }
+
+            loading.style.display = 'block';
+            
+            try {
+                const result = await apiService.analyzeMarkets(selectedAreas, topN);
+                
+                loading.style.display = 'none';
+                
+                if (result.success) {
+                    displayLiveResults(result.recommendations, result.analysis_time);
+                    showNotification('analysisNotification', 
+                        `Found ${result.signals_found} signals from ${result.total_analyzed} symbols`, 
+                        'success');
+                } else {
+                    showNotification('analysisNotification', 
+                        `Analysis failed: ${result.error}`, 'error');
+                }
+                
+                switchTab('results');
+            } catch (error) {
+                loading.style.display = 'none';
+                showNotification('analysisNotification', 
+                    `Network error: ${error.message}`, 'error');
+            }
+        }
+
+        // Display live results
+        function displayLiveResults(recommendations, analysisTime) {
+            const container = document.getElementById('resultsContainer');
+            
+            if (!recommendations || recommendations.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #7f8c8d; padding: 40px;">
+                        <h3>No trading opportunities found</h3>
+                        <p>Try scanning different market areas or check back later</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                    <h3>📊 Live Trading Recommendations</h3>
+                    <p style="margin: 5px 0; color: #666; font-size: 0.9em;">
+                        Analysis time: ${new Date(analysisTime).toLocaleString()}
+                    </p>
+                    <p style="margin: 5px 0; color: #666; font-size: 0.9em;">
+                        Found ${recommendations.length} signals
+                    </p>
+                </div>
+            `;
+            
+            recommendations.forEach(trade => {
+                html += `
+                    <div class="trade-card ${trade.direction === 'BUY' ? 'trade-buy' : 'trade-sell'}">
+                        <div class="trade-header">
+                            <div>
+                                <span class="trade-symbol">${trade.symbol}</span>
+                                <div style="font-size: 0.8em; color: #7f8c8d;">
+                                    ${trade.area} • ${trade.timeframe_lt}/${trade.timeframe_ht}
+                                </div>
+                            </div>
+                            <div>
+                                <span class="trade-direction direction-${trade.direction.toLowerCase()}">
+                                    ${trade.direction}
+                                </span>
+                                <div class="score-badge" style="margin-top: 5px;">
+                                    Score: ${trade.score}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="trade-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Current Price:</span>
+                                <span class="detail-value">$${trade.price}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Stop Loss:</span>
+                                <span class="detail-value">$${trade.sl}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Take Profit:</span>
+                                <span class="detail-value">$${trade.tp}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Risk/Reward:</span>
+                                <span class="detail-value">1:${trade.rr}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">RSI:</span>
+                                <span class="detail-value">${trade.rsi}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Allocation:</span>
+                                <span class="detail-value">$${trade.alloc_usd}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Quantity:</span>
+                                <span class="detail-value">${trade.qty}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Trend OK:</span>
+                                <span class="detail-value">${trade.htf_trend_ok ? '✅' : '❌'}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.8em; color: #666;">
+                            <span class="detail-label">ATR:</span>
+                            <span class="detail-value">${trade.atr}</span>
+                            <span style="margin-left: 15px;" class="detail-label">EMA Fast:</span>
+                            <span class="detail-value">${trade.ema_fast}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Update connection status
+        function updateConnectionStatus() {
+            apiService.healthCheck().then(health => {
+                const statusElement = document.getElementById('connectionStatus');
+                if (health.status === 'healthy') {
+                    statusElement.innerHTML = '🟢 Connected to Live Data';
+                    statusElement.style.color = '#27ae60';
+                } else {
+                    statusElement.innerHTML = '🔴 Connection Failed';
+                    statusElement.style.color = '#e74c3c';
+                }
+            }).catch(() => {
+                const statusElement = document.getElementById('connectionStatus');
+                statusElement.innerHTML = '🔴 Connection Failed';
+                statusElement.style.color = '#e74c3c';
+            });
+        }
+
+        // Save settings
+        function saveSettings() {
+            config.apiBaseUrl = document.getElementById('apiBaseUrl').value;
+            config.capital = parseFloat(document.getElementById('capital').value);
+            config.riskReward = parseFloat(document.getElementById('riskReward').value);
+            config.exchange = document.getElementById('exchange').value;
+            
+            localStorage.setItem('tradingAdvisorSettings', JSON.stringify(config));
+            showNotification('settingsNotification', 'Settings saved successfully!', 'success');
+            updateConnectionStatus();
+        }
+
+        // Load settings
+        function loadSettings() {
+            const saved = localStorage.getItem('tradingAdvisorSettings');
+            if (saved) {
+                Object.assign(config, JSON.parse(saved));
+                document.getElementById('apiBaseUrl').value = config.apiBaseUrl;
+                document.getElementById('capital').value = config.capital;
+                document.getElementById('riskReward').value = config.riskReward;
+                document.getElementById('exchange').value = config.exchange;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            updateConnectionStatus();
+            setInterval(updateConnectionStatus, 30000);
+        });
+    </script>
+</body>
+</html>

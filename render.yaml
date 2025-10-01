@@ -1,0 +1,23 @@
+services:
+  # 🌐 Backend API (Flask)
+  - type: web
+    name: trading-advisor-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 4 -b 0.0.0.0:5000 server:app
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10
+      - key: PORT
+        value: 5000
+
+  # 📊 Frontend (Static HTML)
+  - type: static
+    name: trading-advisor-frontend
+    buildCommand: ""
+    staticPublishPath: .
+    envVars:
+      - key: API_BASE_URL
+        value: https://trading-advisor-backend.onrender.com/api

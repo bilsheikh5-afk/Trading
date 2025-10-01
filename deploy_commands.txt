@@ -1,0 +1,48 @@
+# =============================
+# 🚀 STEP 1: Initialize Git Repo
+# =============================
+
+# Go into your project folder (where server.py, index.html, etc. are)
+cd path/to/your/project
+
+# Initialize a Git repository
+git init
+
+# Add all project files
+git add .
+
+# Save them as your first commit
+git commit -m "Initial commit - Trading Advisor Project"
+
+# =============================
+# 🌐 STEP 2: Connect to GitHub
+# =============================
+
+# Replace YOUR_USERNAME and REPO_NAME with your GitHub username and repo name
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/trading-advisor.git
+
+# Push your code to GitHub
+git push -u origin main
+
+# =============================
+# ☁️ STEP 3: Deploy on Render
+# =============================
+
+# 1️⃣ Go to https://render.com
+# 2️⃣ Click “New +” → “Blueprint” or “Web Service”
+# 3️⃣ Select your GitHub repo `trading-advisor`
+# 4️⃣ Confirm build settings:
+#     - Build command: pip install -r requirements.txt
+#     - Start command: gunicorn -w 4 -b 0.0.0.0:5000 server:app
+# 5️⃣ Render will automatically deploy your backend and frontend!
+
+# =============================
+# 🔁 STEP 4: Future Updates
+# =============================
+
+# Whenever you make changes, run:
+git add .
+git commit -m "Updated project"
+git push
+# Render will detect the change and auto-deploy!
