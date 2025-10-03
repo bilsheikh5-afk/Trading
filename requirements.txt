@@ -4,8 +4,8 @@ pip>=23.0
 Flask==2.3.3
 Flask-CORS==4.0.0
 ccxt
-pandas==2.0.3
-numpy==1.24.3
+pandas>=2.2.3  # Minimum for 3.13 support; latest is 2.3.3 as of Oct 2025
+numpy>=2.1.0   # Minimum for 3.13 support; latest is 2.3.3 as of Sep 2025
 ta==0.10.2
 python-dateutil==2.8.2
 requests==2.31.0
