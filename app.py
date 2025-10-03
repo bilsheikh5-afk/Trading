@@ -1,12 +1,12 @@
 from flask import Flask
-app = Flask(_trading advisor_)
+app = Flask(__trading advisor__)  
 
 @app.route('/')
-def hello():
-    return 'Hello, World!'
+def home():
+    return "Trading Advisor Live!"
 
 if __trading advisor__ == '__main__':
-    app.run()
+    app.run(debug=True)  
 from flask import send_from_directory
 import os
 
