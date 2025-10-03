@@ -1,5 +1,6 @@
 setuptools>=65.5.0
 wheel
+pip>=23.0
 Flask==2.3.3
 Flask-CORS==4.0.0
 ccxt
