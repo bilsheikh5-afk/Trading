@@ -1,11 +1,11 @@
 from flask import Flask
-app = Flask(__name__)  # Must be named 'app'
+app = Flask(_trading advisor_)
 
 @app.route('/')
 def hello():
     return 'Hello, World!'
 
-if __name__ == '__main__':
+if __trading advisor__ == '__main__':
     app.run()
 from flask import send_from_directory
 import os
