@@ -1,4 +1,13 @@
-from flask import Flask, request, jsonify, render_template
+from flask import send_from_directory
+import os
+
+@app.route('/')
+def serve_frontend():
+    return send_from_directory('.', 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    return send_from_directory('.', path)from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import ccxt
 import pandas as pd
@@ -293,6 +302,8 @@ class TradingAnalyzer:
         return 'Crypto' if '/USDT' in symbol_upper else 'Other'
 
 # Initialize analyzer
+app = Flask(__name__, static_folder='.', static_url_path='')
+CORS(app)
 analyzer = TradingAnalyzer()
 
 # API Routes
