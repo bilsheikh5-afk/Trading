@@ -1,12 +1,19 @@
 from flask import Flask
-app = Flask(__trading advisor__)  
+from flask_cors import CORS  # If using CORS
+
+app = Flask(__trading advisor__)
+CORS(app)  # Enable CORS if needed
 
 @app.route('/')
 def home():
-    return "Trading Advisor Live!"
+    return {'message': 'Trading Advisor API is live!'}
+
+@app.route('/health')
+def health():
+    return {'status': 'healthy'}
 
 if __trading advisor__ == '__main__':
-    app.run(debug=True)  
+    app.run(debug=True, host='0.0.0.0', port=5000)  # For local testing
 from flask import send_from_directory
 import os
 
