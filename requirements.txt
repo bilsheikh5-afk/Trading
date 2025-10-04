@@ -1,12 +1,6 @@
-setuptools>=65.5.0
-wheel
-pip>=23.0
-Flask==2.3.3
-Flask-CORS==4.0.0
-ccxt
-pandas>=2.2.3  # Minimum for 3.13 support; latest is 2.3.3 as of Oct 2025
-numpy>=2.1.0   # Minimum for 3.13 support; latest is 2.3.3 as of Sep 2025
-ta==0.10.2
-python-dateutil==2.8.2
-requests==2.31.0
-gunicorn==21.2.0
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pandas==2.2.2
+numpy==1.26.4
+python-binance==1.0.19
+yfinance==0.2.43
