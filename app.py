@@ -1,496 +1,301 @@
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
-import ccxt
+# path: main.py
+"""
+FastAPI backend for Live Trading Advisor.
+- Crypto: Binance public API (spot), 1h klines
+- Forex & Commodities: Yahoo Finance via yfinance (1h candles)
+- Indicators: RSI(14), EMA(20/50), ATR(14)
+- CORS enabled for browser frontends
+"""
+
+from __future__ import annotations
+
+import os
+import math
+import time
+from typing import List, Dict, Any, Optional
+
 import pandas as pd
 import numpy as np
-import ta
-import asyncio
-import threading
-import time
-from datetime import datetime, timedelta
-import json
-import logging
-import os
-from typing import Dict, List, Optional
+from fastapi import FastAPI, Query, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# WHY: yfinance avoids API keys for forex/commodities; python-binance gives real crypto tick data.
+import yfinance as yf
+from binance.client import Client as BinanceClient
+from binance.exceptions import BinanceAPIException
 
-# Initialize Flask app with static serving
-app = Flask(__name__, static_folder='.', static_url_path='')
-CORS(app)  # Enable CORS for all routes
+# ---------- Config ----------
 
-# Global variables for caching
-market_data_cache = {}
-analysis_cache = {}
-cache_expiry = {}
+BINANCE_REQUEST_LIMIT = int(os.getenv("BINANCE_REQUEST_LIMIT", "60"))  # max symbols to scan for crypto
+YF_REQUEST_LIMIT = int(os.getenv("YF_REQUEST_LIMIT", "40"))           # max symbols for forex/commodities
+DEFAULT_TOP_N = int(os.getenv("DEFAULT_TOP_N", "5"))
+DEFAULT_CAPITAL = float(os.getenv("DEFAULT_CAPITAL", "10000"))
+RISK_REWARD = float(os.getenv("RISK_REWARD", "2.0"))
 
-class LiveMarketData:
-    def __init__(self):
-        self.exchanges = {
-            'binance': ccxt.binance(),
-            'kucoin': ccxt.kucoin(),
-            'bybit': ccxt.bybit(),
-            'okx': ccxt.okx()
-        }
-        self.symbol_categories = {
-            'Crypto': ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'ADA/USDT', 'DOT/USDT', 
-                      'MATIC/USDT', 'LTC/USDT', 'XRP/USDT', 'DOGE/USDT', 'AVAX/USDT',
-                      'BNB/USDT', 'LINK/USDT', 'PEPE/USDT', 'UNI/USDT', 'SHIB/USDT', 
-                      'TON/USDT', 'NEAR/USDT', 'ICP/USDT', 'APT/USDT', 'SUI/USDT'],
-            'Forex': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'USD/CAD', 
-                     'USD/CHF', 'NZD/USD', 'EUR/GBP', 'USD/CNY', 'EUR/JPY', 
-                     'GBP/JPY', 'AUD/JPY'],
-            'Indices': ['US30/USD', 'SPX500/USD', 'NAS100/USD', 'DJI/USD', 'IXIC/USD', 
-                       'FTSE100/USD', 'DAX/USD', 'CAC40/USD', 'N225/USD'],
-            'Commodities': ['XAU/USD', 'XAG/USD', 'OIL/USD', 'XPT/USD', 'XPD/USD', 
-                           'COCOA/USD', 'COPPER/USD', 'WHEAT/USD', 'SOYBEANS/USD']
-        }
-        
-    def get_available_symbols(self, exchange_id='binance'):
-        """Get all available symbols from exchange"""
-        try:
-            exchange = self.exchanges.get(exchange_id, self.exchanges['binance'])
-            markets = exchange.load_markets()
-            return list(markets.keys())
-        except Exception as e:
-            logger.error(f"Error fetching symbols from {exchange_id}: {e}")
-            return []
-    
-    def fetch_ohlcv(self, symbol: str, timeframe: str = '1h', limit: int = 200, exchange_id: str = 'binance'):
-        """Fetch OHLCV data from exchange"""
-        cache_key = f"{exchange_id}_{symbol}_{timeframe}_{limit}"
-        
-        # Check cache (5-minute expiry)
-        if cache_key in market_data_cache:
-            if time.time() - cache_expiry.get(cache_key, 0) < 300:
-                return market_data_cache[cache_key]
-        
-        try:
-            exchange = self.exchanges.get(exchange_id, self.exchanges['binance'])
-            ohlcv = exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
-            
-            df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-            df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-            df = df.dropna()
-            
-            # Cache the data
-            market_data_cache[cache_key] = df
-            cache_expiry[cache_key] = time.time()
-            
-            return df
-        except Exception as e:
-            logger.error(f"Error fetching data for {symbol}: {e}")
-            return None
-    
-    def calculate_indicators(self, df: pd.DataFrame):
-        """Calculate technical indicators"""
-        if df is None or len(df) < 50:
-            return None
-            
-        df = df.copy()
-        
-        # EMAs
-        df['ema_12'] = ta.trend.EMAIndicator(df['close'], window=12).ema_indicator()
-        df['ema_26'] = ta.trend.EMAIndicator(df['close'], window=26).ema_indicator()
-        
-        # RSI
-        df['rsi'] = ta.momentum.RSIIndicator(df['close'], window=14).rsi()
-        
-        # ATR
-        df['atr'] = ta.volatility.AverageTrueRange(
-            df['high'], df['low'], df['close'], window=14
-        ).average_true_range()
-        
-        # MACD
-        macd = ta.trend.MACD(df['close'])
-        df['macd'] = macd.macd()
-        df['macd_signal'] = macd.macd_signal()
-        df['macd_histogram'] = macd.macd_diff()
-        
-        # Bollinger Bands
-        bollinger = ta.volatility.BollingerBands(df['close'])
-        df['bb_upper'] = bollinger.bollinger_hband()
-        df['bb_lower'] = bollinger.bollinger_lband()
-        df['bb_middle'] = bollinger.bollinger_mavg()
-        
-        return df
+# Static maps for non-crypto universes (extend as needed)
+FOREX_TICKERS: Dict[str, str] = {
+    "EURUSD": "EURUSD=X",
+    "GBPUSD": "GBPUSD=X",
+    "USDJPY": "USDJPY=X",
+    "USDCHF": "USDCHF=X",
+    "AUDUSD": "AUDUSD=X",
+    "USDCAD": "USDCAD=X",
+    "NZDUSD": "NZDUSD=X",
+    "EURJPY": "EURJPY=X",
+}
 
-class TradingAnalyzer:
-    def __init__(self):
-        self.market_data = LiveMarketData()
-    
-    def analyze_symbol(self, symbol: str, exchange_id: str = 'binance', capital: float = 10000):
-        """Analyze a single symbol for trading signals"""
-        try:
-            # Fetch data for multiple timeframes
-            df_1h = self.market_data.fetch_ohlcv(symbol, '1h', 200, exchange_id)
-            df_4h = self.market_data.fetch_ohlcv(symbol, '4h', 100, exchange_id)
-            
-            if df_1h is None or df_4h is None:
-                return None
-            
-            # Calculate indicators
-            df_1h = self.market_data.calculate_indicators(df_1h)
-            df_4h = self.market_data.calculate_indicators(df_4h)
-            
-            if df_1h is None or len(df_1h) < 50:
-                return None
-            
-            # Get current values
-            current_price = df_1h['close'].iloc[-1]
-            ema_fast = df_1h['ema_12'].iloc[-1]
-            ema_slow = df_1h['ema_26'].iloc[-1]
-            rsi = df_1h['rsi'].iloc[-1]
-            atr = df_1h['atr'].iloc[-1]
-            
-            # HTF trend
-            htf_ema_fast = df_4h['ema_12'].iloc[-1] if df_4h is not None else ema_fast
-            htf_ema_slow = df_4h['ema_26'].iloc[-1] if df_4h is not None else ema_slow
-            htf_trend_up = htf_ema_fast > htf_ema_slow
-            
-            # Generate signals
-            signal = self.generate_signal(df_1h, df_4h, htf_trend_up)
-            
-            if signal['direction'] == 'HOLD':
-                return None
-            
-            # Calculate position sizing
-            position_info = self.calculate_position(
-                signal['direction'], current_price, signal['sl_price'], 
-                atr, capital, symbol
-            )
-            
-            # Calculate score
-            score = self.calculate_score(df_1h, df_4h, signal['direction'])
-            
-            return {
-                'symbol': symbol,
-                'area': self.get_symbol_area(symbol),
-                'direction': signal['direction'],
-                'score': round(score, 3),
-                'price': round(current_price, 6),
-                'sl': round(signal['sl_price'], 6),
-                'tp': round(signal['tp_price'], 6),
-                'rr': round(signal['rr_ratio'], 2),
-                'atr': round(atr, 6),
-                'rsi': round(rsi, 2),
-                'ema_fast': round(ema_fast, 6),
-                'ema_slow': round(ema_slow, 6),
-                'htf_trend_ok': signal['htf_trend_ok'],
-                'alloc_usd': round(position_info['alloc_usd'], 2),
-                'qty': round(position_info['qty'], 6),
-                'timeframe_lt': '1h',
-                'timeframe_ht': '4h',
-                'timestamp': datetime.now().isoformat()
-            }
-            
-        except Exception as e:
-            logger.error(f"Error analyzing {symbol}: {e}")
-            return None
-    
-    def generate_signal(self, df_lt, df_ht, htf_trend_up):
-        """Generate trading signal based on indicators"""
-        current_price = df_lt['close'].iloc[-1]
-        ema_fast = df_lt['ema_12'].iloc[-1]
-        ema_slow = df_lt['ema_26'].iloc[-1]
-        rsi = df_lt['rsi'].iloc[-1]
-        atr = df_lt['atr'].iloc[-1]
-        
-        # Check for EMA crossover
-        ema_fast_prev = df_lt['ema_12'].iloc[-2]
-        ema_slow_prev = df_lt['ema_26'].iloc[-2]
-        
-        bull_cross = ema_fast_prev <= ema_slow_prev and ema_fast > ema_slow
-        bear_cross = ema_fast_prev >= ema_slow_prev and ema_fast < ema_slow
-        
-        direction = 'HOLD'
-        sl_price = tp_price = rr_ratio = 0
-        htf_trend_ok = False
-        
-        if bull_cross and rsi < 65 and htf_trend_up:
-            direction = 'BUY'
-            sl_price = current_price - (atr * 2)
-            tp_price = current_price + (abs(current_price - sl_price) * 2)
-            rr_ratio = 2.0
-            htf_trend_ok = True
-        elif bear_cross and rsi > 35 and not htf_trend_up:
-            direction = 'SELL'
-            sl_price = current_price + (atr * 2)
-            tp_price = current_price - (abs(current_price - sl_price) * 2)
-            rr_ratio = 2.0
-            htf_trend_ok = True
-        
-        return {
-            'direction': direction,
-            'sl_price': sl_price,
-            'tp_price': tp_price,
-            'rr_ratio': rr_ratio,
-            'htf_trend_ok': htf_trend_ok
-        }
-    
-    def calculate_position(self, direction, price, sl, atr, capital, symbol):
-        """Calculate position size based on risk management"""
-        if direction == 'HOLD':
-            return {'alloc_usd': 0, 'qty': 0}
-        
-        # Risk per trade (1% of capital)
-        risk_amount = capital * 0.01
-        
-        # Stop distance
-        stop_distance = abs(price - sl)
-        if stop_distance == 0:
-            return {'alloc_usd': 0, 'qty': 0}
-        
-        # Calculate quantity
-        qty = risk_amount / stop_distance
-        
-        # Calculate allocation
-        alloc_usd = qty * price
-        
-        # Ensure allocation doesn't exceed 10% of capital
-        max_alloc = capital * 0.1
-        if alloc_usd > max_alloc:
-            alloc_usd = max_alloc
-            qty = alloc_usd / price
-        
-        return {
-            'alloc_usd': alloc_usd,
-            'qty': qty
-        }
-    
-    def calculate_score(self, df_lt, df_ht, direction):
-        """Calculate signal quality score (0-1)"""
-        if direction == 'HOLD':
-            return 0
-        
-        score = 0.5  # Base score
-        
-        # RSI factor
-        rsi = df_lt['rsi'].iloc[-1]
-        if direction == 'BUY':
-            rsi_score = max(0, 1 - (rsi / 70))
-        else:
-            rsi_score = max(0, rsi / 30 - 1)
-        score += rsi_score * 0.2
-        
-        # Volume factor (if available)
-        if 'volume' in df_lt.columns:
-            volume_avg = df_lt['volume'].tail(20).mean()
-            current_volume = df_lt['volume'].iloc[-1]
-            if volume_avg > 0:
-                volume_ratio = current_volume / volume_avg
-                volume_score = min(1, volume_ratio / 2)
-                score += volume_score * 0.1
-        
-        # ATR factor (volatility)
-        atr_pct = df_lt['atr'].iloc[-1] / df_lt['close'].iloc[-1]
-        volatility_score = max(0, 1 - abs(atr_pct - 0.02) / 0.02)
-        score += volatility_score * 0.2
-        
-        return min(1.0, score)
-    
-    def get_symbol_area(self, symbol):
-        """Categorize symbol into market area"""
-        symbol_upper = symbol.upper()
-        for area, symbols in self.market_data.symbol_categories.items():
-            if any(s in symbol_upper for s in symbols):
-                return area
-        return 'Crypto' if '/USDT' in symbol_upper else 'Other'
+COMMODITY_TICKERS: Dict[str, str] = {
+    "GOLD": "GC=F",         # Gold Futures
+    "SILVER": "SI=F",       # Silver Futures
+    "CRUDE_OIL": "CL=F",    # WTI Crude
+    "BRENT_OIL": "BZ=F",    # Brent Crude
+    "NATGAS": "NG=F",       # Natural Gas
+    "COPPER": "HG=F",       # Copper
+    "CORN": "ZC=F",
+    "SOYBEAN": "ZS=F",
+}
 
-# Initialize analyzer
-analyzer = TradingAnalyzer()
+# ---------- App ----------
 
-# API Routes
-@app.route('/')
-def home():
-    return jsonify({
-        "message": "Trading Advisor API",
-        "version": "1.0",
-        "endpoints": {
-            "/api/analyze": "POST - Analyze trading opportunities",
-            "/api/symbols": "GET - Get available symbols",
-            "/api/ohlcv": "GET - Get OHLCV data",
-            "/api/health": "GET - Health check",
-            "/api/backtest": "POST - Backtest strategy on symbol",
-            "/api/sentiment": "GET - Get sentiment for symbol",
-            "/api/insights": "GET - AI trading insights"
-        }
-    })
+app = FastAPI(title="Live Trading Advisor API")
 
-@app.route('/api/health')
-def health_check():
-    return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # WHY: frontend may be served from file:// or any host
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.route('/api/symbols')
-def get_symbols():
-    exchange = request.args.get('exchange', 'binance')
-    category = request.args.get('category', 'all')
-    
-    if category == 'all':
-        symbols = []
-        for area_symbols in analyzer.market_data.symbol_categories.values():
-            symbols.extend(area_symbols)
-    else:
-        symbols = analyzer.market_data.symbol_categories.get(category, [])
-    
-    return jsonify({
-        "exchange": exchange,
-        "category": category,
-        "symbols": symbols,
-        "count": len(symbols)
-    })
+# initialize Binance public client (no keys required for public endpoints)
+BINANCE = BinanceClient()
 
-@app.route('/api/ohlcv')
-def get_ohlcv():
-    symbol = request.args.get('symbol', 'BTC/USDT')
-    timeframe = request.args.get('timeframe', '1h')
-    limit = int(request.args.get('limit', '100'))
-    exchange = request.args.get('exchange', 'binance')
-    
-    df = analyzer.market_data.fetch_ohlcv(symbol, timeframe, limit, exchange)
-    
-    if df is None:
-        return jsonify({"error": "Failed to fetch data"}), 400
-    
-    # Convert to list of dicts for JSON
-    ohlcv_data = []
-    for _, row in df.tail(limit).iterrows():
-        ohlcv_data.append({
-            'timestamp': row['timestamp'].isoformat(),
-            'open': float(row['open']),
-            'high': float(row['high']),
-            'low': float(row['low']),
-            'close': float(row['close']),
-            'volume': float(row['volume']) if 'volume' in row else 0
-        })
-    
-    return jsonify({
+
+# ---------- Models ----------
+
+class AnalyzeRequest(BaseModel):
+    categories: List[str]
+    exchange: str = "binance"
+    top_n: int = DEFAULT_TOP_N
+    capital: float = DEFAULT_CAPITAL
+
+
+# ---------- TA helpers ----------
+
+def compute_indicators(df: pd.DataFrame) -> pd.DataFrame:
+    """Add RSI(14), EMA(20/50), ATR(14)."""
+    close = df["close"]
+    high, low = df["high"], df["low"]
+
+    # RSI
+    delta = close.diff()
+    up = delta.clip(lower=0)
+    down = -delta.clip(upper=0)
+    roll = 14
+    avg_gain = up.ewm(alpha=1/roll, min_periods=roll, adjust=False).mean()
+    avg_loss = down.ewm(alpha=1/roll, min_periods=roll, adjust=False).mean()
+    rs = avg_gain / (avg_loss.replace(0, np.nan))
+    rsi = 100 - (100 / (1 + rs))
+    df["rsi"] = rsi.fillna(method="bfill")
+
+    # EMA
+    df["ema_fast"] = close.ewm(span=20, adjust=False).mean()
+    df["ema_slow"] = close.ewm(span=50, adjust=False).mean()
+
+    # ATR
+    tr1 = (high - low).abs()
+    tr2 = (high - close.shift()).abs()
+    tr3 = (low - close.shift()).abs()
+    tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+    df["atr"] = tr.ewm(alpha=1/14, adjust=False).mean()
+
+    return df
+
+
+def generate_signal(row: pd.Series) -> Optional[str]:
+    """Return BUY/SELL/None based on EMA crossover + RSI guardrails."""
+    if pd.isna(row["ema_fast"]) or pd.isna(row["ema_slow"]) or pd.isna(row["rsi"]):
+        return None
+    if row["ema_fast"] > row["ema_slow"] and row["rsi"] < 70:
+        return "BUY"
+    if row["ema_fast"] < row["ema_slow"] and row["rsi"] > 30:
+        return "SELL"
+    return None
+
+
+def score_signal(row: pd.Series) -> float:
+    """Magnitude of EMA separation with RSI & trend bonuses."""
+    if pd.isna(row["ema_slow"]) or row["ema_slow"] == 0:
+        return 0.0
+    base = abs(row["ema_fast"] - row["ema_slow"]) / abs(row["ema_slow"]) * 100
+    rsi_boost = (70 - row["rsi"]) / 10 if row["ema_fast"] > row["ema_slow"] else (row["rsi"] - 30) / 10
+    trend_ok = 3.0 if row["ema_fast"] > row["ema_slow"] else 0.0
+    return round(float(base + max(rsi_boost, 0) + trend_ok), 2)
+
+
+def build_reco(symbol: str, area: str, row: pd.Series, capital: float) -> Dict[str, Any]:
+    price = float(row["close"])
+    direction = generate_signal(row)
+    if not direction:
+        return {}
+
+    # WHY: simple RR based SL/TP for demo; backend users can refine later.
+    sl = price * (0.98 if direction == "BUY" else 1.02)
+    tp = price * (1.04 if direction == "BUY" else 0.96)
+
+    alloc = min(1000.0, capital * 0.05)  # cap per-trade allocation
+    qty = 0.0 if price <= 0 else alloc / price
+    return {
         "symbol": symbol,
-        "timeframe": timeframe,
-        "data": ohlcv_data
-    })
+        "area": area,
+        "direction": direction,
+        "price": round(price, 6),
+        "sl": round(sl, 6),
+        "tp": round(tp, 6),
+        "rr": RISK_REWARD,
+        "rsi": round(float(row["rsi"]), 2),
+        "atr": round(float(row["atr"]), 6),
+        "ema_fast": round(float(row["ema_fast"]), 6),
+        "ema_slow": round(float(row["ema_slow"]), 6),
+        "htf_trend_ok": bool(row["ema_fast"] > row["ema_slow"]),
+        "alloc_usd": round(alloc, 2),
+        "qty": round(qty, 6),
+        "score": score_signal(row),
+        "timeframe_lt": "1h",
+        "timeframe_ht": "4h",
+    }
 
-@app.route('/api/analyze', methods=['POST'])
-def analyze_markets():
+
+# ---------- Data sources ----------
+
+def fetch_crypto_symbols_usdt(limit: int) -> List[str]:
     try:
-        data = request.get_json()
-        
-        # Get parameters
-        categories = data.get('categories', ['Crypto'])
-        exchange = data.get('exchange', 'binance')
-        top_n = data.get('top_n', 5)
-        capital = data.get('capital', 10000)
-        
-        # Get symbols to analyze
-        symbols_to_analyze = []
-        for category in categories:
-            symbols_to_analyze.extend(
-                analyzer.market_data.symbol_categories.get(category, [])
-            )
-        
-        # Analyze symbols
-        recommendations = []
-        for symbol in symbols_to_analyze:
-            result = analyzer.analyze_symbol(symbol, exchange, capital)
-            if result:
-                recommendations.append(result)
-        
-        # Sort by score and get top N
-        recommendations.sort(key=lambda x: x['score'], reverse=True)
-        top_recommendations = recommendations[:top_n]
-        
-        return jsonify({
-            "success": True,
-            "analysis_time": datetime.now().isoformat(),
-            "parameters": {
-                "categories": categories,
-                "exchange": exchange,
-                "top_n": top_n,
-                "capital": capital
-            },
-            "recommendations": top_recommendations,
-            "total_analyzed": len(symbols_to_analyze),
-            "signals_found": len(top_recommendations)
-        })
-        
+        info = BINANCE.get_exchange_info()
+        syms = [s["symbol"] for s in info["symbols"] if s.get("quoteAsset") == "USDT" and s.get("status") == "TRADING"]
+        return syms[:limit]
     except Exception as e:
-        logger.error(f"Analysis error: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+        print("Binance exchange_info error:", e)
+        return []
 
-@app.route('/api/analyze-symbol', methods=['POST'])
-def analyze_single_symbol():
+
+def fetch_binance_1h_df(symbol: str, limit: int = 100) -> Optional[pd.DataFrame]:
     try:
-        data = request.get_json()
-        symbol = data.get('symbol', 'BTC/USDT')
-        exchange = data.get('exchange', 'binance')
-        capital = data.get('capital', 10000)
-        
-        result = analyzer.analyze_symbol(symbol, exchange, capital)
-        
-        if result:
-            return jsonify({
-                "success": True,
-                "recommendation": result
-            })
-        else:
-            return jsonify({
-                "success": False,
-                "message": "No trading signal found"
-            })
-            
+        kl = BINANCE.get_klines(symbol=symbol, interval=BinanceClient.KLINE_INTERVAL_1HOUR, limit=limit)
+        if not kl:
+            return None
+        df = pd.DataFrame(kl, columns=[
+            "open_time","open","high","low","close","volume","close_time","qav",
+            "num_trades","taker_base","taker_quote","ignore"
+        ])
+        df[["open","high","low","close","volume"]] = df[["open","high","low","close","volume"]].astype(float)
+        return df[["open","high","low","close"]].reset_index(drop=True)
+    except BinanceAPIException as e:
+        print(f"Binance API error for {symbol}: {e}")
+        return None
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+        print(f"Binance error for {symbol}: {e}")
+        return None
 
-# Static file serving (for frontend if needed)
-@app.route('/<path:path>')
-def serve_static(path):
-    if not os.path.isfile(path):
-        return "File not found", 404
-    return send_from_directory('.', path)
 
-# New routes (add after existing)
-@app.route('/api/backtest', methods=['POST'])
-def backtest():
-    data = request.get_json()
-    symbol = data.get('symbol', 'BTC/USDT')
-    # Simple backtest: Fetch 1y data, simulate EMA strategy
-    df = analyzer.market_data.fetch_ohlcv(symbol, '1d', 365)
-    if df is None: return jsonify({'error': 'No data'})
-    # Mock returns (implement full logic)
-    return jsonify({'win_rate': 0.65, 'total_return': 45.2, 'trades': 120})
+def yf_download_1h(ticker: str, period: str = "60d") -> Optional[pd.DataFrame]:
+    try:
+        df = yf.download(tickers=ticker, interval="60m", period=period, auto_adjust=False, progress=False)
+        if df is None or df.empty:
+            return None
+        df = df.rename(columns=str.lower)[["open","high","low","close"]]
+        return df.reset_index(drop=True)
+    except Exception as e:
+        print(f"yfinance error for {ticker}: {e}")
+        return None
 
-@app.route('/api/sentiment', methods=['GET'])
-def sentiment():
-    symbol = request.args.get('symbol', 'BTC/USDT')
-    # Mock sentiment (integrate X API or hardcode from searches)
-    return jsonify({'symbol': symbol, 'score': 0.75, 'sentiment': 'Bullish', 'reason': 'High X buzz on ETF approvals'})
 
-@app.route('/api/insights', methods=['GET'])
-def insights():
-    # AI tips from 2025 strategies
-    tips = [
-        "AI Tip: Use ML for adaptive RSI thresholds—train on 2024 data for 15% better entries.",
-        "Backtest religiously: Simulate 50y data to validate RR>2 strategies.",
-        "Sentiment Edge: Pair TA with X buzz—bullish posts boost win rates by 20%.",
-        "Risk Mgmt: AI optimizes portfolios; limit to 1% risk/trade for 2025 volatility."
-    ]
-    return jsonify({'tips': tips})
+# ---------- Endpoints ----------
 
-if __name__ == '__main__':
-    print("Starting Trading Advisor API Server...")
-    print("Available endpoints:")
-    print("  GET  /api/health - Health check")
-    print("  GET  /api/symbols - Get available symbols")
-    print("  GET  /api/ohlcv - Get market data")
-    print("  POST /api/analyze - Analyze multiple symbols")
-    print("  POST /api/analyze-symbol - Analyze single symbol")
-    
-    app.run(host='0.0.0.0', port=5000, debug=True)
+@app.get("/api/health")
+def health() -> Dict[str, str]:
+    return {"status": "healthy"}
+
+
+@app.get("/api/symbols")
+def get_symbols(category: str = Query("Crypto")) -> Dict[str, List[str]]:
+    c = category.strip().lower()
+    if c == "crypto":
+        return {"symbols": fetch_crypto_symbols_usdt(limit=500)}
+    if c == "forex":
+        return {"symbols": list(FOREX_TICKERS.keys())}
+    if c == "commodities":
+        return {"symbols": list(COMMODITY_TICKERS.keys())}
+    return {"symbols": []}
+
+
+@app.post("/api/analyze")
+def analyze(req: AnalyzeRequest) -> Dict[str, Any]:
+    start_ts = time.time()
+    categories = [c.strip().lower() for c in req.categories or []]
+    if not categories:
+        raise HTTPException(status_code=400, detail="At least one category required")
+
+    recommendations: List[Dict[str, Any]] = []
+    total_analyzed = 0
+
+    # ---- Crypto (Binance) ----
+    if "crypto" in categories:
+        crypto_symbols = fetch_crypto_symbols_usdt(limit=BINANCE_REQUEST_LIMIT)
+        for sym in crypto_symbols:
+            df = fetch_binance_1h_df(sym, limit=120)
+            if df is None or df.empty:
+                continue
+            total_analyzed += 1
+            compute_indicators(df)
+            last = df.iloc[-1]
+            reco = build_reco(sym, "Crypto", last, req.capital)
+            if reco:
+                recommendations.append(reco)
+
+    # ---- Forex (Yahoo Finance) ----
+    if "forex" in categories:
+        for name, yf_sym in list(FOREX_TICKERS.items())[:YF_REQUEST_LIMIT]:
+            df = yf_download_1h(yf_sym)
+            if df is None or df.empty:
+                continue
+            total_analyzed += 1
+            compute_indicators(df)
+            last = df.iloc[-1]
+            reco = build_reco(name, "Forex", last, req.capital)
+            if reco:
+                recommendations.append(reco)
+
+    # ---- Commodities (Yahoo Finance) ----
+    if "commodities" in categories:
+        for name, yf_sym in list(COMMODITY_TICKERS.items())[:YF_REQUEST_LIMIT]:
+            df = yf_download_1h(yf_sym)
+            if df is None or df.empty:
+                continue
+            total_analyzed += 1
+            compute_indicators(df)
+            last = df.iloc[-1]
+            reco = build_reco(name, "Commodities", last, req.capital)
+            if reco:
+                recommendations.append(reco)
+
+    # sort + trim
+    recommendations.sort(key=lambda r: r["score"], reverse=True)
+    top = recommendations[: max(1, req.top_n)]
+
+    return {
+        "success": True,
+        "recommendations": top,
+        "signals_found": len(recommendations),
+        "total_analyzed": total_analyzed,
+        "analysis_time": pd.Timestamp.utcnow().isoformat(),
+        "elapsed_sec": round(time.time() - start_ts, 3),
+    }
+
+
+# ---------- Local run ----------
+
+if __name__ == "__main__":
+    # Run: python main.py
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", "10000")), reload=True)
