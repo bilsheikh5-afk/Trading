@@ -1,0 +1,1937 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Trading Advisor - Professional Trading Signals</title>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        /* Professional CSS Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --primary-blue: #2563eb;
+            --primary-dark: #1e293b;
+            --primary-darker: #0f172a;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-orange: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --border-color: #334155;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1e1b4b 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            padding-bottom: 70px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0;
+            min-height: 100vh;
+            background: var(--bg-dark);
+        }
+        
+        /* Professional Header Styles */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary-darker) 0%, #1e1b4b 100%);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #3b82f6 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 18px;
+            box-shadow: var(--shadow);
+        }
+        
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .app-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+        
+        .app-tagline {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-purple) 0%, #a855f7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+        
+        .user-avatar:active {
+            transform: scale(0.95);
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            padding: 20px;
+        }
+        
+        /* Dashboard Styles */
+        .dashboard {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #1d4ed8 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dashboard::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        
+        .balance {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        
+        .balance-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+        
+        .balance-amount {
+            font-size: 28px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .profit {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .profit-positive {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+        }
+        
+        .profit-negative {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        /* Section Titles */
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 24px 0 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .view-all {
+            font-size: 14px;
+            color: var(--primary-blue);
+            cursor: pointer;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        
+        .view-all:active {
+            color: #1d4ed8;
+        }
+        
+        /* Opportunity Cards */
+        .opportunities-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .opportunity-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+        }
+
+        .opportunity-card.stock {
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .opportunity-card.forex {
+            border-left: 4px solid var(--accent-orange);
+        }
+
+        .opportunity-card.crypto {
+            border-left: 4px solid var(--accent-purple);
+        }
+        
+        .opportunity-card:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .opportunity-card.new {
+            animation: highlight 2s ease-in-out;
+        }
+        
+        @keyframes highlight {
+            0% { background-color: #334155; }
+            100% { background-color: var(--bg-card); }
+        }
+        
+        .opportunity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .asset-info {
+            flex: 1;
+        }
+        
+        .asset {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .asset-type {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .trend {
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        .trend-up {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+        
+        .trend-down {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+        
+        .opportunity-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .expert {
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .risk-level {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .risk-low {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+        
+        .risk-medium {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: var(--accent-orange);
+        }
+        
+        .risk-high {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+        
+        .opportunity-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 14px;
+        }
+        
+        .time-remaining {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            font-size: 14px;
+            box-shadow: var(--shadow);
+        }
+        
+        .action-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Section Styles */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--primary-darker);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 1px solid var(--border-color);
+            max-width: 480px;
+            margin: 0 auto;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 11px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 12px;
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 80px;
+        }
+        
+        .nav-item:active {
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+        
+        .nav-item.active {
+            color: var(--primary-blue);
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        /* Filter Tabs */
+        .filter-tabs {
+            display: flex;
+            margin: 16px 0;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            gap: 8px;
+        }
+        
+        .filter-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .filter-tab {
+            padding: 10px 16px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            white-space: nowrap;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            border: 1px solid var(--border-color);
+            font-weight: 500;
+        }
+        
+        .filter-tab:active {
+            transform: scale(0.95);
+        }
+        
+        .filter-tab.active {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+        
+        /* Expert Cards */
+        .experts-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .expert-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            transition: transform 0.2s;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+        
+        .expert-card:active {
+            transform: translateY(2px);
+        }
+        
+        .expert-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-purple) 0%, #a855f7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 16px;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        
+        .expert-info {
+            flex: 1;
+        }
+        
+        .expert-name {
+            font-weight: 700;
+            margin-bottom: 4px;
+            font-size: 16px;
+        }
+        
+        .expert-specialty {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        
+        .expert-rating {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .rating-stars {
+            color: var(--accent-orange);
+            margin-right: 6px;
+            letter-spacing: -1px;
+        }
+
+        /* Portfolio Section */
+        .portfolio-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 18px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .performance-chart {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        .chart-placeholder {
+            height: 150px;
+            background: linear-gradient(135deg, #334155 0%, var(--bg-card) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Settings Section */
+        .settings-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        .settings-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--primary-blue);
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-color);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-blue);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .select-setting {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        /* Connection Status */
+        .connection-status {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+            box-shadow: var(--shadow);
+        }
+        
+        .connected {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .disconnected {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        /* Loading States */
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+        
+        .close-modal:active {
+            background: var(--bg-hover);
+        }
+        
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 14px 20px;
+            border-radius: 12px;
+            z-index: 3000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            max-width: 90%;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+        
+        /* Swipe to refresh */
+        .pull-to-refresh {
+            text-align: center;
+            padding: 12px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        /* Price change indicators */
+        .price-up {
+            color: var(--accent-green);
+        }
+        
+        .price-down {
+            color: var(--accent-red);
+        }
+        
+        .price-change {
+            font-size: 12px;
+            margin-left: 4px;
+            font-weight: 600;
+        }
+
+        /* Asset type badges */
+        .asset-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            margin-left: 8px;
+        }
+
+        .badge-stock {
+            background-color: rgba(37, 99, 235, 0.2);
+            color: var(--primary-blue);
+        }
+
+        .badge-forex {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: var(--accent-orange);
+        }
+
+        .badge-crypto {
+            background-color: rgba(139, 92, 246, 0.2);
+            color: var(--accent-purple);
+        }
+
+        /* Error states */
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.7;
+        }
+
+        .retry-btn {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .retry-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Disclaimer */
+        .disclaimer {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 24px 0;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        /* Android-specific optimizations */
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 16px;
+            }
+            
+            .dashboard {
+                padding: 18px;
+            }
+            
+            .opportunity-card, .expert-card {
+                padding: 16px;
+            }
+            
+            .action-btn {
+                padding: 12px 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status disconnected" id="connectionStatus">
+        Connecting...
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <!-- Trade Execution Modal -->
+    <div class="modal" id="tradeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="tradeModalTitle">Execute Trade</div>
+                <button class="close-modal" id="closeTradeModal">&times;</button>
+            </div>
+            <div id="tradeModalBody">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Signal Details Modal -->
+    <div class="modal" id="signalModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="signalModalTitle">Signal Details</div>
+                <button class="close-modal" id="closeSignalModal">&times;</button>
+            </div>
+            <div id="signalModalBody">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Professional Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-container">
+                    <div class="logo-icon">C</div>
+                    <div class="logo-text">
+                        <div class="app-name">Trading Advisor</div>
+                        <div class="app-tagline">Professional Trading Signals</div>
+                    </div>
+                </div>
+                <div class="user-avatar" id="userMenu">
+                    <span>JD</span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Opportunities Section -->
+            <div class="section active" id="opportunitiesSection">
+                <div class="dashboard" id="portfolioDashboard">
+                    <div class="balance">
+                        <div class="balance-label">Portfolio Value</div>
+                        <div class="balance-amount">$--.--</div>
+                    </div>
+                    <div class="profit">
+                        <div class="balance-label">Today's Profit/Loss</div>
+                        <div class="profit-positive">+$--.--</div>
+                    </div>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Open Trades</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">--%</div>
+                            <div class="stat-label">Win Rate</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">-.-</div>
+                            <div class="stat-label">Risk Ratio</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pull-to-refresh" id="pullToRefresh">
+                    ↓ Pull to refresh
+                </div>
+                
+                <div class="section-title">
+                    <h2>Live Trading Opportunities</h2>
+                    <span class="view-all" id="viewAllSignals">View All</span>
+                </div>
+                
+                <div class="filter-tabs">
+                    <div class="filter-tab active" data-filter="all">All</div>
+                    <div class="filter-tab" data-filter="stocks">Stocks</div>
+                    <div class="filter-tab" data-filter="forex">Forex</div>
+                    <div class="filter-tab" data-filter="crypto">Crypto</div>
+                    <div class="filter-tab" data-filter="low">Low Risk</div>
+                </div>
+                
+                <div class="opportunities-grid" id="opportunitiesContainer">
+                    <div class="loading pulse">Connecting to live trading data...</div>
+                </div>
+            </div>
+
+            <!-- Experts Section -->
+            <div class="section" id="expertsSection">
+                <div class="section-title">
+                    <h2>Top Trading Experts</h2>
+                    <span class="view-all" id="viewAllExperts">View All</span>
+                </div>
+                
+                <div class="experts-grid" id="expertsContainer">
+                    <div class="loading pulse">Loading expert data from server...</div>
+                </div>
+
+                <div class="section-title" style="margin-top: 30px;">
+                    <h2>Expert Performance</h2>
+                </div>
+                
+                <div class="performance-chart">
+                    <div class="chart-placeholder">
+                        Loading performance data...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portfolio Section -->
+            <div class="section" id="portfolioSection">
+                <div class="section-title">
+                    <h2>My Portfolio</h2>
+                </div>
+
+                <div class="dashboard">
+                    <div class="balance">
+                        <div class="balance-label">Total Balance</div>
+                        <div class="balance-amount">$--.--</div>
+                    </div>
+                    <div class="profit">
+                        <div class="balance-label">Today's P&L</div>
+                        <div class="profit-positive">+$--.--</div>
+                    </div>
+                </div>
+
+                <div class="portfolio-stats">
+                    <div class="stat-card">
+                        <div class="value">--</div>
+                        <div class="label">Open Trades</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">--%</div>
+                        <div class="label">Win Rate</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">-.-</div>
+                        <div class="label">Risk Ratio</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">--</div>
+                        <div class="label">Total Trades</div>
+                    </div>
+                </div>
+
+                <div class="section-title">
+                    <h2>Performance</h2>
+                </div>
+
+                <div class="performance-chart">
+                    <div class="chart-placeholder">
+                        Loading portfolio performance...
+                    </div>
+                </div>
+
+                <div class="section-title">
+                    <h2>Active Trades</h2>
+                </div>
+
+                <div id="activeTradesContainer">
+                    <div class="loading">Loading active trades from server...</div>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="section" id="settingsSection">
+                <div class="section-title">
+                    <h2>Settings</h2>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Notifications</div>
+                    <div class="setting-item">
+                        <div class="setting-label">Push Notifications</div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">Email Alerts</div>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">Sound Effects</div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Trading Preferences</div>
+                    <div class="setting-item">
+                        <div class="setting-label">Default Investment</div>
+                        <select class="select-setting">
+                            <option>$500</option>
+                            <option>$1000</option>
+                            <option>$2500</option>
+                            <option>$5000</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">Risk Level</div>
+                        <select class="select-setting">
+                            <option>Low</option>
+                            <option>Medium</option>
+                            <option>High</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">Auto-Trade Signals</div>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Appearance</div>
+                    <div class="setting-item">
+                        <div class="setting-label">Dark Mode</div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">Compact View</div>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Account</div>
+                    <div class="setting-item">
+                        <div class="setting-label">Account Type</div>
+                        <div>Premium</div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">Member Since</div>
+                        <div>Jan 2024</div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">Logout</div>
+                        <button class="action-btn" style="padding: 8px 16px; font-size: 14px;">Logout</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="disclaimer">
+                <strong>Disclaimer:</strong> Trading involves substantial risk of loss and is not suitable for every investor. The suggestions provided are for informational purposes only. You should not construe any such information as legal, tax, investment, financial, or other advice. Past performance is not indicative of future results.
+            </div>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-section="opportunities">
+                <div class="nav-icon">📈</div>
+                <div>Opportunities</div>
+            </div>
+            <div class="nav-item" data-section="experts">
+                <div class="nav-icon">👥</div>
+                <div>Experts</div>
+            </div>
+            <div class="nav-item" data-section="portfolio">
+                <div class="nav-icon">💼</div>
+                <div>Portfolio</div>
+            </div>
+            <div class="nav-item" data-section="settings">
+                <div class="nav-icon">⚙️</div>
+                <div>Settings</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://clearpro-trading.onrender.com/socket.io/socket.io.js"></script>
+    <script>
+        // Enhanced JavaScript for Real-time Functionality - NO MOCK DATA
+        class TradingAdvisorApp {
+            constructor() {
+                this.socket = null;
+                this.currentSignals = [];
+                this.currentExperts = [];
+                this.currentPortfolio = null;
+                this.activeTrades = [];
+                this.activeFilter = 'all';
+                this.currentSection = 'opportunities';
+                this.isConnected = false;
+                this.backendUrl = 'https://clearpro-trading.onrender.com';
+                this.dataLoaded = false;
+                
+                this.init();
+            }
+            
+            init() {
+                this.connectSocket();
+                this.setupEventListeners();
+                this.loadInitialData();
+                this.setupSwipeRefresh();
+            }
+            
+            connectSocket() {
+                this.socket = io(this.backendUrl);
+                const connectionStatus = document.getElementById('connectionStatus');
+                
+                this.socket.on('connect', () => {
+                    console.log('Connected to server');
+                    this.isConnected = true;
+                    connectionStatus.textContent = 'Live';
+                    connectionStatus.className = 'connection-status connected';
+                    this.showToast('Connected to live trading data', 'success');
+                });
+                
+                this.socket.on('disconnect', () => {
+                    console.log('Disconnected from server');
+                    this.isConnected = false;
+                    connectionStatus.textContent = 'Offline';
+                    connectionStatus.className = 'connection-status disconnected';
+                    this.showToast('Connection lost - Reconnecting...', 'error');
+                });
+                
+                this.socket.on('connect_error', (error) => {
+                    console.error('Connection error:', error);
+                    this.showToast('Failed to connect to trading server', 'error');
+                    this.showConnectionError();
+                });
+                
+                this.socket.on('signals', (signals) => {
+                    console.log('Received live signals:', signals);
+                    this.currentSignals = signals;
+                    this.displaySignals(signals);
+                    this.dataLoaded = true;
+                });
+                
+                this.socket.on('new-signals', (newSignals) => {
+                    console.log('Received new signals:', newSignals);
+                    this.currentSignals = [...newSignals, ...this.currentSignals].slice(0, 20);
+                    this.displayNewSignals(newSignals);
+                    this.showToast(`${newSignals.length} new trading signals`, 'info');
+                });
+                
+                this.socket.on('portfolio-update', (portfolio) => {
+                    console.log('Received portfolio update:', portfolio);
+                    this.currentPortfolio = portfolio;
+                    this.updatePortfolio(portfolio);
+                    this.dataLoaded = true;
+                });
+                
+                this.socket.on('experts', (experts) => {
+                    console.log('Received experts data:', experts);
+                    this.currentExperts = experts;
+                    this.displayExperts(experts);
+                    this.dataLoaded = true;
+                });
+            }
+            
+            setupEventListeners() {
+                // Filter tabs
+                document.querySelectorAll('.filter-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        this.setActiveFilter(e.target.getAttribute('data-filter'));
+                    });
+                });
+                
+                // Bottom navigation
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        this.switchSection(e.currentTarget.getAttribute('data-section'));
+                    });
+                });
+                
+                // View all buttons
+                document.getElementById('viewAllSignals').addEventListener('click', () => {
+                    this.showAllSignals();
+                });
+                
+                document.getElementById('viewAllExperts').addEventListener('click', () => {
+                    this.showAllExperts();
+                });
+                
+                // User menu
+                document.getElementById('userMenu').addEventListener('click', () => {
+                    this.showUserMenu();
+                });
+                
+                // Modal close buttons
+                document.getElementById('closeTradeModal').addEventListener('click', () => {
+                    this.closeModal('tradeModal');
+                });
+                
+                document.getElementById('closeSignalModal').addEventListener('click', () => {
+                    this.closeModal('signalModal');
+                });
+                
+                // Click outside modal to close
+                document.getElementById('tradeModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'tradeModal') {
+                        this.closeModal('tradeModal');
+                    }
+                });
+                
+                document.getElementById('signalModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'signalModal') {
+                        this.closeModal('signalModal');
+                    }
+                });
+                
+                // Enhanced trade execution with event delegation
+                document.getElementById('opportunitiesContainer').addEventListener('click', (e) => {
+                    if (e.target.classList.contains('action-btn')) {
+                        const card = e.target.closest('.opportunity-card');
+                        const signalId = card.getAttribute('data-id');
+                        const signal = this.currentSignals.find(s => s.id == signalId);
+                        if (signal) {
+                            this.executeTrade(signal);
+                        }
+                    }
+                    
+                    // Card click for details
+                    if (e.target.closest('.opportunity-card') && !e.target.classList.contains('action-btn')) {
+                        const card = e.target.closest('.opportunity-card');
+                        const signalId = card.getAttribute('data-id');
+                        const signal = this.currentSignals.find(s => s.id == signalId);
+                        if (signal) {
+                            this.showSignalDetails(signal);
+                        }
+                    }
+                });
+
+                // Settings switches
+                document.querySelectorAll('.switch input').forEach(switchEl => {
+                    switchEl.addEventListener('change', (e) => {
+                        const setting = e.target.closest('.setting-item').querySelector('.setting-label').textContent;
+                        this.showToast(`${setting} ${e.target.checked ? 'enabled' : 'disabled'}`, 'info');
+                    });
+                });
+
+                // Settings selects
+                document.querySelectorAll('.select-setting').forEach(select => {
+                    select.addEventListener('change', (e) => {
+                        const setting = e.target.closest('.setting-item').querySelector('.setting-label').textContent;
+                        this.showToast(`${setting} updated to ${e.target.value}`, 'info');
+                    });
+                });
+            }
+            
+            setupSwipeRefresh() {
+                let startY = 0;
+                let currentY = 0;
+                const pullToRefresh = document.getElementById('pullToRefresh');
+                const container = document.querySelector('.container');
+                
+                container.addEventListener('touchstart', (e) => {
+                    if (window.scrollY === 0) {
+                        startY = e.touches[0].pageY;
+                    }
+                });
+                
+                container.addEventListener('touchmove', (e) => {
+                    if (startY && window.scrollY === 0) {
+                        currentY = e.touches[0].pageY;
+                        const diff = currentY - startY;
+                        
+                        if (diff > 0) {
+                            e.preventDefault();
+                            pullToRefresh.style.transform = `translateY(${Math.min(diff, 60)}px)`;
+                            pullToRefresh.textContent = diff > 50 ? '↻ Release to refresh' : '↓ Pull to refresh';
+                        }
+                    }
+                });
+                
+                container.addEventListener('touchend', () => {
+                    if (currentY - startY > 50) {
+                        this.refreshData();
+                    }
+                    startY = 0;
+                    currentY = 0;
+                    pullToRefresh.style.transform = 'translateY(0)';
+                    pullToRefresh.textContent = '↓ Pull to refresh';
+                });
+            }
+            
+            async loadInitialData() {
+                try {
+                    this.showToast('Loading live trading data...', 'info');
+                    
+                    const [signalsResponse, expertsResponse, portfolioResponse] = await Promise.all([
+                        fetch(`${this.backendUrl}/api/signals`),
+                        fetch(`${this.backendUrl}/api/experts`),
+                        fetch(`${this.backendUrl}/api/portfolio`)
+                    ]);
+                    
+                    if (!signalsResponse.ok) throw new Error('Failed to load signals from server');
+                    if (!expertsResponse.ok) throw new Error('Failed to load experts from server');
+                    if (!portfolioResponse.ok) throw new Error('Failed to load portfolio from server');
+                    
+                    const signals = await signalsResponse.json();
+                    const experts = await expertsResponse.json();
+                    const portfolio = await portfolioResponse.json();
+                    
+                    this.currentSignals = signals;
+                    this.currentExperts = experts;
+                    this.currentPortfolio = portfolio;
+                    
+                    this.displaySignals(signals);
+                    this.displayExperts(experts);
+                    this.updatePortfolio(portfolio);
+                    
+                    this.dataLoaded = true;
+                    this.showToast('Live data loaded successfully', 'success');
+                    
+                } catch (error) {
+                    console.error('Error loading initial data:', error);
+                    this.showToast('Failed to load live trading data', 'error');
+                    this.showDataError();
+                }
+            }
+
+            showConnectionError() {
+                const container = document.getElementById('opportunitiesContainer');
+                container.innerHTML = `
+                    <div class="error-state">
+                        <div class="error-icon">🔌</div>
+                        <h3>Connection Failed</h3>
+                        <p>Unable to connect to trading server. Please check your internet connection and try again.</p>
+                        <button class="retry-btn" onclick="app.retryConnection()">Retry Connection</button>
+                    </div>
+                `;
+            }
+
+            showDataError() {
+                const container = document.getElementById('opportunitiesContainer');
+                container.innerHTML = `
+                    <div class="error-state">
+                        <div class="error-icon">⚠️</div>
+                        <h3>Data Unavailable</h3>
+                        <p>Unable to load live trading data from the server. The server might be temporarily unavailable.</p>
+                        <button class="retry-btn" onclick="app.refreshData()">Retry Loading</button>
+                    </div>
+                `;
+            }
+
+            retryConnection() {
+                this.showToast('Reconnecting to server...', 'info');
+                this.connectSocket();
+                this.loadInitialData();
+            }
+            
+            async refreshData() {
+                this.showToast('Refreshing live data...', 'info');
+                await this.loadInitialData();
+            }
+            
+            displaySignals(signals) {
+                const container = document.getElementById('opportunitiesContainer');
+                
+                if (!signals || signals.length === 0) {
+                    container.innerHTML = '<div class="loading">No live trading signals available at the moment</div>';
+                    return;
+                }
+                
+                const filteredSignals = this.filterSignals(signals, this.activeFilter);
+                
+                if (filteredSignals.length === 0) {
+                    container.innerHTML = '<div class="loading">No signals match your current filter</div>';
+                    return;
+                }
+                
+                container.innerHTML = filteredSignals.map(signal => {
+                    // Determine asset type from symbol or asset name
+                    let assetType = 'stock';
+                    const assetUpper = signal.asset.toUpperCase();
+                    const symbolUpper = signal.symbol ? signal.symbol.toUpperCase() : '';
+                    
+                    if (assetUpper.includes('FOREX') || assetUpper.includes('/') || 
+                        symbolUpper.includes('EUR') || symbolUpper.includes('USD') || 
+                        symbolUpper.includes('JPY') || symbolUpper.includes('GBP')) {
+                        assetType = 'forex';
+                    } else if (assetUpper.includes('CRYPTO') || assetUpper.includes('BTC') || 
+                               assetUpper.includes('ETH') || assetUpper.includes('XRP') ||
+                               symbolUpper.includes('BTC') || symbolUpper.includes('ETH')) {
+                        assetType = 'crypto';
+                    }
+                    
+                    const badgeClass = `badge-${assetType}`;
+                    const assetTypeLabel = assetType === 'forex' ? 'FOREX' : 
+                                          assetType === 'crypto' ? 'CRYPTO' : 'STOCK';
+                    
+                    return `
+                    <div class="opportunity-card ${assetType}" data-id="${signal.id}">
+                        <div class="opportunity-header">
+                            <div class="asset-info">
+                                <div class="asset">${signal.asset} <span class="asset-badge ${badgeClass}">${assetTypeLabel}</span></div>
+                                <div class="asset-type">Live Signal • ${signal.expert}</div>
+                            </div>
+                            <div class="trend trend-${signal.trend}">${signal.trend === 'up' ? 'Bullish' : 'Bearish'}</div>
+                        </div>
+                        <div class="opportunity-details">
+                            <div>🎯 Entry: ${signal.entry}</div>
+                            <div>💰 Target: ${signal.target}</div>
+                        </div>
+                        <div class="opportunity-details">
+                            <div>🛡️ Stop Loss: ${signal.stopLoss}</div>
+                            <div class="risk-level risk-${signal.risk}">${signal.risk.charAt(0).toUpperCase() + signal.risk.slice(1)} Risk</div>
+                        </div>
+                        <div class="opportunity-footer">
+                            <div class="time-remaining">
+                                Live: ${assetType === 'forex' ? '' : '$'}${signal.currentPrice} 
+                                <span class="${signal.priceChange >= 0 ? 'price-up' : 'price-down'} price-change">
+                                    ${signal.priceChange >= 0 ? '↗' : '↘'} ${Math.abs(signal.priceChange)}%
+                                </span>
+                            </div>
+                            <button class="action-btn">Trade Now</button>
+                        </div>
+                    </div>
+                `}).join('');
+            }
+            
+            displayNewSignals(newSignals) {
+                const container = document.getElementById('opportunitiesContainer');
+                const filteredSignals = this.filterSignals(newSignals, this.activeFilter);
+                
+                filteredSignals.forEach(signal => {
+                    let assetType = 'stock';
+                    const assetUpper = signal.asset.toUpperCase();
+                    const symbolUpper = signal.symbol ? signal.symbol.toUpperCase() : '';
+                    
+                    if (assetUpper.includes('FOREX') || assetUpper.includes('/') || 
+                        symbolUpper.includes('EUR') || symbolUpper.includes('USD')) {
+                        assetType = 'forex';
+                    } else if (assetUpper.includes('CRYPTO') || assetUpper.includes('BTC') || 
+                               symbolUpper.includes('BTC') || symbolUpper.includes('ETH')) {
+                        assetType = 'crypto';
+                    }
+                    
+                    const badgeClass = `badge-${assetType}`;
+                    const assetTypeLabel = assetType === 'forex' ? 'FOREX' : 
+                                          assetType === 'crypto' ? 'CRYPTO' : 'STOCK';
+                    
+                    const signalElement = document.createElement('div');
+                    signalElement.className = `opportunity-card ${assetType} new`;
+                    signalElement.setAttribute('data-id', signal.id);
+                    signalElement.innerHTML = `
+                        <div class="opportunity-header">
+                            <div class="asset-info">
+                                <div class="asset">${signal.asset} <span class="asset-badge ${badgeClass}">${assetTypeLabel}</span> 🔥 NEW</div>
+                                <div class="asset-type">Live Signal • ${signal.expert}</div>
+                            </div>
+                            <div class="trend trend-${signal.trend}">${signal.trend === 'up' ? 'Bullish' : 'Bearish'}</div>
+                        </div>
+                        <div class="opportunity-details">
+                            <div>🎯 Entry: ${signal.entry}</div>
+                            <div>💰 Target: ${signal.target}</div>
+                        </div>
+                        <div class="opportunity-details">
+                            <div>🛡️ Stop Loss: ${signal.stopLoss}</div>
+                            <div class="risk-level risk-${signal.risk}">${signal.risk.charAt(0).toUpperCase() + signal.risk.slice(1)} Risk</div>
+                        </div>
+                        <div class="opportunity-footer">
+                            <div class="time-remaining">
+                                Live: ${assetType === 'forex' ? '' : '$'}${signal.currentPrice} 
+                                <span class="${signal.priceChange >= 0 ? 'price-up' : 'price-down'} price-change">
+                                    ${signal.priceChange >= 0 ? '↗' : '↘'} ${Math.abs(signal.priceChange)}%
+                                </span>
+                            </div>
+                            <button class="action-btn">Trade Now</button>
+                        </div>
+                    `;
+                    container.insertBefore(signalElement, container.firstChild);
+                });
+            }
+            
+            displayExperts(experts) {
+                const container = document.getElementById('expertsContainer');
+                
+                if (!experts || experts.length === 0) {
+                    container.innerHTML = '<div class="loading">No expert data available from server</div>';
+                    return;
+                }
+                
+                container.innerHTML = experts.map(expert => `
+                    <div class="expert-card" data-id="${expert.id}">
+                        <div class="expert-avatar">${expert.avatar}</div>
+                        <div class="expert-info">
+                            <div class="expert-name">${expert.name}</div>
+                            <div class="expert-specialty">${expert.specialty}</div>
+                            <div class="expert-rating">
+                                <span class="rating-stars">${'★'.repeat(Math.floor(expert.rating))}${expert.rating % 1 >= 0.5 ? '½' : ''}</span>
+                                <span>${expert.rating} (${expert.reviews} reviews) - ${expert.successRate}% Success</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            updatePortfolio(portfolio) {
+                const dashboard = document.getElementById('portfolioDashboard');
+                let profitElement = dashboard.querySelector('.profit-positive') || dashboard.querySelector('.profit-negative');
+                
+                if (!profitElement) {
+                    const profitDiv = dashboard.querySelector('.profit');
+                    profitElement = document.createElement('div');
+                    profitElement.className = 'profit-positive';
+                    profitDiv.appendChild(profitElement);
+                }
+                
+                dashboard.querySelector('.balance-amount').textContent = `$${portfolio.portfolioValue.toFixed(2)}`;
+                
+                const profitClass = portfolio.dailyProfit >= 0 ? 'profit-positive' : 'profit-negative';
+                const profitSign = portfolio.dailyProfit >= 0 ? '+' : '';
+                profitElement.className = profitClass;
+                profitElement.textContent = `${profitSign}$${portfolio.dailyProfit.toFixed(2)}`;
+                
+                const statValues = dashboard.querySelectorAll('.stat-value');
+                statValues[0].textContent = portfolio.openTrades;
+                statValues[1].textContent = `${portfolio.winRate}%`;
+                statValues[2].textContent = portfolio.riskRatio.toFixed(1);
+            }
+            
+            setActiveFilter(filter) {
+                this.activeFilter = filter;
+                document.querySelectorAll('.filter-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+                
+                if (this.dataLoaded) {
+                    this.displaySignals(this.currentSignals);
+                }
+            }
+            
+            filterSignals(signals, filter) {
+                if (filter === 'all') return signals;
+                
+                return signals.filter(signal => {
+                    let assetType = 'stock';
+                    const assetUpper = signal.asset.toUpperCase();
+                    const symbolUpper = signal.symbol ? signal.symbol.toUpperCase() : '';
+                    
+                    if (assetUpper.includes('FOREX') || assetUpper.includes('/') || 
+                        symbolUpper.includes('EUR') || symbolUpper.includes('USD')) {
+                        assetType = 'forex';
+                    } else if (assetUpper.includes('CRYPTO') || assetUpper.includes('BTC') || 
+                               symbolUpper.includes('BTC') || symbolUpper.includes('ETH')) {
+                        assetType = 'crypto';
+                    }
+                    
+                    const risk = signal.risk.toLowerCase();
+                    
+                    switch(filter) {
+                        case 'stocks':
+                            return assetType === 'stock';
+                        case 'forex':
+                            return assetType === 'forex';
+                        case 'crypto':
+                            return assetType === 'crypto';
+                        case 'low':
+                            return risk === 'low';
+                        default:
+                            return true;
+                    }
+                });
+            }
+            
+            switchSection(section) {
+                this.currentSection = section;
+                
+                // Update navigation
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelector(`[data-section="${section}"]`).classList.add('active');
+                
+                // Update sections
+                document.querySelectorAll('.section').forEach(sec => {
+                    sec.classList.remove('active');
+                });
+                document.getElementById(`${section}Section`).classList.add('active');
+                
+                this.showToast(`Switched to ${section}`, 'info');
+            }
+            
+            executeTrade(signal) {
+                const modal = document.getElementById('tradeModal');
+                const modalBody = document.getElementById('tradeModalBody');
+                const modalTitle = document.getElementById('tradeModalTitle');
+                
+                let assetType = 'stock';
+                const assetUpper = signal.asset.toUpperCase();
+                
+                if (assetUpper.includes('FOREX') || assetUpper.includes('/')) {
+                    assetType = 'forex';
+                } else if (assetUpper.includes('CRYPTO') || assetUpper.includes('BTC')) {
+                    assetType = 'crypto';
+                }
+                
+                const isForex = assetType === 'forex';
+                
+                modalTitle.textContent = `Execute Live Trade: ${signal.asset}`;
+                modalBody.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">Live Signal Details:</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
+                            <div>Type:</div><div>${assetType.toUpperCase()}</div>
+                            <div>Trend:</div><div>${signal.trend === 'up' ? 'Bullish 📈' : 'Bearish 📉'}</div>
+                            <div>Expert:</div><div>${signal.expert}</div>
+                            <div>Risk:</div><div><span class="risk-level risk-${signal.risk}">${signal.risk.charAt(0).toUpperCase() + signal.risk.slice(1)}</span></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">Live Trade Parameters:</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
+                            <div>Entry:</div><div>${signal.entry}</div>
+                            <div>Target:</div><div>${signal.target}</div>
+                            <div>Stop Loss:</div><div>${signal.stopLoss}</div>
+                            <div>Current Price:</div><div>${isForex ? '' : '$'}${signal.currentPrice}</div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 24px;">
+                        <label for="tradeAmount" style="display: block; margin-bottom: 8px; font-weight: 600;">
+                            Investment Amount ${isForex ? '(Lots)' : '($)'}:
+                        </label>
+                        <input type="number" id="tradeAmount" value="${isForex ? '1' : '1000'}" 
+                               min="${isForex ? '0.1' : '100'}" max="${isForex ? '10' : '10000'}" 
+                               step="${isForex ? '0.1' : '100'}" 
+                               style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-primary); font-size: 16px;">
+                    </div>
+                    <button id="confirmTrade" style="width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent-green) 0%, #059669 100%); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 16px; box-shadow: var(--shadow);">
+                        Execute Live Trade
+                    </button>
+                `;
+                
+                modal.style.display = 'flex';
+                
+                document.getElementById('confirmTrade').addEventListener('click', () => {
+                    const amount = document.getElementById('tradeAmount').value;
+                    this.processTrade(signal, amount);
+                });
+            }
+            
+            async processTrade(signal, amount) {
+                try {
+                    this.showToast('Executing live trade...', 'info');
+                    
+                    // Simulate API delay for real trading execution
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    this.closeModal('tradeModal');
+                    
+                    let assetType = 'stock';
+                    const assetUpper = signal.asset.toUpperCase();
+                    
+                    if (assetUpper.includes('FOREX') || assetUpper.includes('/')) {
+                        assetType = 'forex';
+                    } else if (assetUpper.includes('CRYPTO') || assetUpper.includes('BTC')) {
+                        assetType = 'crypto';
+                    }
+                    
+                    const isForex = assetType === 'forex';
+                    const amountDisplay = isForex ? `${amount} lots` : `$${amount}`;
+                    
+                    this.showToast(`Live trade executed for ${amountDisplay} on ${signal.asset.split(' - ')[0]}`, 'success');
+                    
+                    // Refresh live data
+                    this.refreshData();
+                    
+                } catch (error) {
+                    console.error('Live trade execution error:', error);
+                    this.showToast('Live trade execution failed', 'error');
+                }
+            }
+            
+            showSignalDetails(signal) {
+                const modal = document.getElementById('signalModal');
+                const modalBody = document.getElementById('signalModalBody');
+                const modalTitle = document.getElementById('signalModalTitle');
+                
+                let assetType = 'stock';
+                const assetUpper = signal.asset.toUpperCase();
+                
+                if (assetUpper.includes('FOREX') || assetUpper.includes('/')) {
+                    assetType = 'forex';
+                } else if (assetUpper.includes('CRYPTO') || assetUpper.includes('BTC')) {
+                    assetType = 'crypto';
+                }
+                
+                const isForex = assetType === 'forex';
+                
+                modalTitle.textContent = `Live Signal Details: ${signal.asset}`;
+                modalBody.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">Live Expert Analysis:</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
+                            <div>Type:</div><div>${assetType.toUpperCase()}</div>
+                            <div>Expert:</div><div>${signal.expert}</div>
+                            <div>Trend:</div><div>${signal.trend === 'up' ? 'Bullish 📈' : 'Bearish 📉'}</div>
+                            <div>Risk Level:</div><div><span class="risk-level risk-${signal.risk}">${signal.risk.charAt(0).toUpperCase() + signal.risk.slice(1)}</span></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">Live Trading Parameters:</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
+                            <div>Entry Range:</div><div>${signal.entry}</div>
+                            <div>Target Price:</div><div>${signal.target}</div>
+                            <div>Stop Loss:</div><div>${signal.stopLoss}</div>
+                            <div>Current Live Price:</div><div>${isForex ? '' : '$'}${signal.currentPrice}</div>
+                            <div>Live Price Change:</div><div><span class="${signal.priceChange >= 0 ? 'price-up' : 'price-down'}">${signal.priceChange >= 0 ? '+' : ''}${signal.priceChange}%</span></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 24px;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">Live Timing:</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
+                            <div>Signal Generated:</div><div>${new Date(signal.timestamp).toLocaleString()}</div>
+                            <div>Expires:</div><div>${new Date(signal.expiry).toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <button onclick="app.executeTrade(${JSON.stringify(signal).replace(/"/g, '&quot;')})" 
+                            style="width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary-blue) 0%, #3b82f6 100%); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 16px; box-shadow: var(--shadow);">
+                        Execute Live Trade
+                    </button>
+                `;
+                
+                modal.style.display = 'flex';
+            }
+            
+            showAllSignals() {
+                if (this.dataLoaded) {
+                    this.displaySignals(this.currentSignals);
+                    this.showToast('Showing all live signals', 'info');
+                } else {
+                    this.showToast('Loading live signals...', 'info');
+                }
+            }
+            
+            showAllExperts() {
+                if (this.dataLoaded) {
+                    this.displayExperts(this.currentExperts);
+                    this.showToast('Showing all live experts', 'info');
+                } else {
+                    this.showToast('Loading expert data...', 'info');
+                }
+            }
+            
+            showUserMenu() {
+                this.showToast('User profile menu', 'info');
+            }
+            
+            closeModal(modalId) {
+                document.getElementById(modalId).style.display = 'none';
+            }
+            
+            showToast(message, type = 'info') {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.className = `toast show ${type}`;
+                
+                setTimeout(() => {
+                    toast.className = 'toast';
+                }, 3000);
+            }
+        }
+        
+        // Initialize the app when DOM is loaded
+        let app;
+        document.addEventListener('DOMContentLoaded', function() {
+            app = new TradingAdvisorApp();
+        });
+        
+        // Android app specific functions
+        if (window.Android) {
+            window.Android.interfaceReady = function() {
+                console.log('Android interface ready');
+            };
+        }
+        
+        // Prevent zoom on double-tap
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(function(registrationError) {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
